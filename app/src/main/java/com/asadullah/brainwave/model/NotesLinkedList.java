@@ -9,13 +9,13 @@ public class NotesLinkedList {
         size = 0;
     }
 
-    public void insertNote(String title, String content, String url,String selectedImagePath) {
+    public void insertNote(String title, String content, String url,String selectedImagePath, Long selectedDateTime ) {
         if (title == null || content == null) {
             throw new IllegalArgumentException("Title and content cannot be null");
         }
 
         // Create new note with the next reference initially set to null
-        Note newNote = new Note(title, content, url,selectedImagePath);
+        Note newNote = new Note(title, content, url,selectedImagePath,selectedDateTime );
         // Set the next reference to current head
         newNote.next = head;
         // Update head to point to new note

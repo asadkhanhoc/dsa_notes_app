@@ -50,7 +50,6 @@
                 android:textColor="@android:color/holo_blue_dark"
                 android:textSize="14sp"
                 android:visibility="gone"/>
-
         </LinearLayout>
 
         <ImageButton

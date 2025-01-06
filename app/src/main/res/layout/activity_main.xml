@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -22,9 +23,10 @@
         android:id="@+id/titleInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:hint="\tTitle"
-        android:textSize="16sp"
-        android:layout_marginBottom="8dp"/>
+        android:minHeight="48dp"
+        android:textSize="16sp" />
 
     <EditText
         android:id="@+id/contentInput"
@@ -57,9 +59,10 @@
         android:id="@+id/addUrlButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add URL"
+        android:layout_marginBottom="8dp"
         android:background="@color/white"
-        android:layout_marginBottom="8dp"/>
+        android:text="Add URL"
+        tools:ignore="TextContrastCheck" />
 
     <ImageView
         android:id="@+id/previewImage"
@@ -74,16 +77,26 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white"
-        android:text="Add Image"/>
+        android:text="Add Image"
+        tools:ignore="TextContrastCheck" />
+
+    <Button
+        android:id="@+id/setReminderButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="10dp"
+        android:background="@color/white"
+        android:text="Set Reminder"
+        tools:ignore="TextContrastCheck" />
 
     <Button
         android:id="@+id/addButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add Note"
-        android:layout_marginTop="10dp"
+        android:layout_marginBottom="16dp"
         android:background="@color/white"
-        android:layout_marginBottom="16dp"/>
+        android:text="Add Note"
+        tools:ignore="TextContrastCheck" />
 
     <TextView
         android:id="@+id/noNoteFound"

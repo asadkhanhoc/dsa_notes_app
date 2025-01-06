@@ -1,8 +1,16 @@
 package com.asadullah.brainwave;
 
+import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
@@ -26,7 +34,9 @@ import com.asadullah.brainwave.model.*;
 import com.asadullah.brainwave.recyclerview.NotesAdapter;
 import com.bumptech.glide.Glide;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     private NotesLinkedList notesList;
@@ -37,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     private NotesAdapter adapter;
     private Dialog dialogAddUrl;
     private String selectedUrl = "";
+
+    private long selectedDateTime = 0;
 
     private static final int PICK_IMAGE_REQUEST = 1;
     private String selectedImagePath = "";
@@ -53,7 +65,58 @@ public class MainActivity extends AppCompatActivity {
         setupUrlDialog();
         setupSearchListener();
 
-        findViewById(R.id.addImageButton).setOnClickListener(v -> openImagePicker());
+        createNotificationChannel();
+    }
+
+    private void showDateTimePicker() {
+        Calendar calendar = Calendar.getInstance();
+
+        new DatePickerDialog(this, (view, year, month, day) -> {
+            calendar.set(Calendar.YEAR, year);
+            calendar.set(Calendar.MONTH, month);
+            calendar.set(Calendar.DAY_OF_MONTH, day);
+
+            new TimePickerDialog(this, (timeView, hour, minute) -> {
+                calendar.set(Calendar.HOUR_OF_DAY, hour);
+                calendar.set(Calendar.MINUTE, minute);
+                selectedDateTime = calendar.getTimeInMillis();
+
+                Toast.makeText(this, "Reminder set for: " +
+                                new SimpleDateFormat("dd/MM/yyyy HH:mm").format(calendar.getTime()),
+                        Toast.LENGTH_SHORT).show();
+
+            }, calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE), true)
+                    .show();
+
+        }, calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH))
+                .show();
+    }
+
+    @SuppressLint("ScheduleExactAlarm")
+    private void scheduleNotification(Note note) {
+        Intent intent = new Intent(this, ReminderBroadcast.class);
+        intent.putExtra("title", note.title);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,
+                (int) System.currentTimeMillis(), intent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, note.reminderTime, pendingIntent);
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "notifyNote", "Note Reminders",
+                    NotificationManager.IMPORTANCE_HIGH);
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel);
+        }
     }
 
     private void openImagePicker() {
@@ -93,7 +156,12 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.addButton).setOnClickListener(v -> addNote());
         findViewById(R.id.addUrlButton).setOnClickListener(v -> showAddUrlDialog());
+
+        findViewById(R.id.addImageButton).setOnClickListener(v -> openImagePicker());
+
+        findViewById(R.id.setReminderButton).setOnClickListener(v -> showDateTimePicker());
     }
+
 
     private void setupRecyclerView() {
         recyclerView = findViewById(R.id.recyclerView);
@@ -101,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
         adapter = new NotesAdapter(new Note[0]);
         recyclerView.setAdapter(adapter);
     }
+
 
     private void setupUrlDialog() {
         dialogAddUrl = new Dialog(this);
@@ -112,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
 
         EditText inputUrl = dialogAddUrl.findViewById(R.id.inputUrl);
         TextView textAdd = dialogAddUrl.findViewById(R.id.textAdd);
+
 
         textAdd.setOnClickListener(v -> {
             String url = inputUrl.getText().toString().trim();
@@ -148,8 +218,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-
 
     private void showAddUrlDialog() {
         if (dialogAddUrl != null) {
@@ -195,8 +263,15 @@ public class MainActivity extends AppCompatActivity {
         String title = titleInput.getText().toString().trim();
         String content = contentInput.getText().toString().trim();
 
+        Note note = new Note(title, content, selectedUrl,selectedImagePath, selectedDateTime);
+
         if (!title.isEmpty() && !content.isEmpty()) {
-            notesList.insertNote(title, content, selectedUrl, selectedImagePath);
+            notesList.insertNote(title, content, selectedUrl, selectedImagePath, selectedDateTime);
+
+            if (selectedDateTime > 0) {
+                scheduleNotification(note);
+            }
+
             updateRecyclerView();
             clearInputs();
         } else {
